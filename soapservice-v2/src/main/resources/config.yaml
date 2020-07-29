@@ -1,0 +1,7 @@
+db:
+  host: "localhost"
+  port: "3306"
+  user: "root"
+  password: "suiTs2020.."
+  database: "new_schema?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC"
+

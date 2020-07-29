@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	<sub-flow name="getDBRecord" doc:id="805a3baf-85d5-4758-a7f5-de834b0923a7" >
+		<db:stored-procedure doc:name="Copy_of_Stored procedure" doc:id="20386f37-f35f-4b24-9f53-e3c2b7bb1bb9" config-ref="Database_Config">
+			<db:sql>CALL sp_get_company(:companyID)</db:sql>
+			<db:input-parameters><![CDATA[#[{companyID:payload.company_id}]]]></db:input-parameters>
+		</db:stored-procedure>
+		<logger level="INFO" doc:name="Logger" doc:id="c4df1148-3cc1-4ad1-84a4-1e9afd5cc02a" message="#[payload]" />
+	</sub-flow>
+	<flow name="postDBRecord" doc:id="00bd1dd0-60ca-4c56-b664-e11a16eca00b" >
+		<db:stored-procedure doc:name="Copy_of_Stored procedure" doc:id="e77c920d-e0e5-4c7c-a6bf-506265a13118" config-ref="Database_Config" >
+			<db:sql >CALL add_record(:name,:address,:phone,:companyID);</db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	name: payload.company_name,
+	address: payload.company_address,
+	phone: payload.company_phone
+}]]]></db:input-parameters>
+			<db:output-parameters >
+				<db:output-parameter key="companyID" type="INTEGER" />
+			</db:output-parameters>
+		</db:stored-procedure>
+		<db:select doc:name="Copy_of_Select" doc:id="4481609f-5cf5-47f9-babc-5723aeb45208" config-ref="Database_Config" >
+			<db:sql >SELECT *
+FROM company
+WHERE company_id=(SELECT MAX(company_id) FROM company)</db:sql>
+		</db:select>
+		<ee:transform doc:name="Copy_of_Transform Message" doc:id="75a517f3-95f4-47e2-ba01-97c655ef808e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+---
+message: payload[0].company_id as String]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="a68e2234-a243-4058-a787-102ad9a7de1e" message='#[payload]'/>
+	</flow>
+</mule>

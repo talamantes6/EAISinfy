@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="Company_db_json" format="json">
+      <types:shape format="weave" example="examples/company_db.json"><![CDATA[%dw 2.0
+
+type Company_db_json = {|
+  company_id: Number {"typeId": "int"}, 
+  company_name: String, 
+  company_address: String, 
+  company_phone: Number {"typeId": "int"}
+|} {"example": "{\\\"company_id\\\":1,\\\"company_name\\\":\\\"Infy\\\",\\\"company_address\\\":\\\"Constituci\u00F3n\\\",\\\"company_phone\\\":123456}"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="Company_json" format="json">
+      <types:shape format="weave" example="examples/company.json"><![CDATA[%dw 2.0
+
+type Company_json = {|
+  companyID: Number {"typeId": "int"}, 
+  companyName: String, 
+  companyAddress: String, 
+  companyPhone: Number {"typeId": "int"}
+|} {"example": "{\\\"companyID\\\":1,\\\"companyName\\\":\\\"Infy\\\",\\\"companyAddress\\\":\\\"Constituci\u00F3n\\\",\\\"companyPhone\\\":123456}"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#bfd6db5d-e498-406f-b52c-8f3411fe5d40">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="Company_db_json"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#4d43c27e-fe92-4a6b-bbae-529ce15c4d7d">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="Company_db_json[]"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="Company_db_json[]"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

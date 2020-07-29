@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit-soap="http://www.mulesoft.org/schema/mule/apikit-soap" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/apikit-soap http://www.mulesoft.org/schema/mule/apikit-soap/current/mule-apikit-soap.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+    <http:listener-config name="api-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8081"/>
+    </http:listener-config>
+    <apikit-soap:config httpStatusVarName="httpStatus" name="soapkit-config" port="muleWSDLSOAP" service="muleWSDL" wsdlLocation="muleWSDL.wsdl"/>
+    <flow name="api-main">
+        <http:listener config-ref="api-httpListenerConfig" path="/muleWSDL/muleWSDLSOAP">
+            <http:response statusCode="#[attributes.protocolHeaders.httpStatus default 200]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[attributes.protocolHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[attributes.protocolHeaders.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[attributes.protocolHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit-soap:router config-ref="soapkit-config">
+            <apikit-soap:message>#[payload]</apikit-soap:message>
+            <apikit-soap:attributes>#[
+              %dw 2.0
+              output application/java
+              ---
+              {
+                  headers: attributes.headers,
+                  method: attributes.method,
+                  queryString: attributes.queryString
+            }]</apikit-soap:attributes>
+        </apikit-soap:router>
+    </flow>
+    <flow name="GetDBRecord:\soapkit-config">
+		<logger level="INFO" doc:name="Logger" doc:id="edc8a5ff-be36-4f9b-87aa-78c9729619db" message='"Get DB record initiated"'/>
+		<ee:transform doc:name="Extract companyID" doc:id="3d983995-30dc-4918-abca-7704a516c7df">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+ns ns0 http://www.tibco.com/muleWSDL/
+---
+{
+	company_id: payload.body.ns0#GetDBRecord.companyID default 0
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="get DB record" doc:id="6f0873d6-e735-48bc-9bb9-7c8ceb8865ad" name="getDBRecord" />
+		<ee:transform doc:name="Sending response" doc:id="fefbc256-a08f-4be2-83ae-d845045a45b5">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+ns ns0 http://www.tibco.com/muleWSDL/
+---
+{
+	body: {
+		ns0#GetDBRecordResponse: {
+			company_id: payload[0].company_id default 0,
+			company_name: payload[0].company_name default "",
+			company_address: payload[0].company_address default "",
+			company_phone: payload[0].company_phone default 0
+		}
+	} write "application/xml"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="4274c7c9-0fa9-450f-b87c-6e988205990e" message='"Response sent"'/>
+    </flow>
+    <flow name="PostDBRecord:\soapkit-config">
+		<logger level="INFO" doc:name="Logger" doc:id="89e2d309-19cf-4491-8337-6083a3de53ed" message='"Post DB record initiated"'/>
+		<ee:transform doc:name="Extract CompanyNoID" doc:id="4ddc633a-6302-4532-9bea-c003645eae47">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+ns ns0 http://www.tibco.com/muleWSDL/
+---
+{
+	company_name: payload.body.ns0#PostDBRecord.company_name default "",
+	company_address: payload.body.ns0#PostDBRecord.company_address default "",
+	company_phone: payload.body.ns0#PostDBRecord.company_phone default 0
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="post DB record" doc:id="b77c7893-dd8c-4892-8eb0-761ec6c65bbb" name="postDBRecord" />
+		<ee:transform doc:name="Sending response" doc:id="9e2e1418-ce9f-4752-a513-711821947cd0" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+ns ns0 http://www.tibco.com/muleWSDL/
+---
+{
+	body: {
+		ns0#PostDBRecordResponse: {
+			message: payload.message
+		}
+	} write "application/xml"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="2212662c-065c-4638-8aab-ce6eed18f0d4" message='"Response sent"'/>
+    </flow>
+    <flow name="PublishJMSmsg:\soapkit-config">
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/java
+ns soap http://schemas.xmlsoap.org/soap/envelope
+---
+{
+    body: {
+        soap#Fault: {
+            faultcode: "soap:Server",
+            faultstring: "Operation [PublishJMSmsg:\soapkit-config] not implemented"
+        }
+    } write "application/xml"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="ConsumeJMSmsg:\soapkit-config">
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/java
+ns soap http://schemas.xmlsoap.org/soap/envelope
+---
+{
+    body: {
+        soap#Fault: {
+            faultcode: "soap:Server",
+            faultstring: "Operation [ConsumeJMSmsg:\soapkit-config] not implemented"
+        }
+    } write "application/xml"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+</mule>

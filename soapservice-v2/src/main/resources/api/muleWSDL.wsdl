@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<wsdl:definitions xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tns="http://www.tibco.com/muleWSDL/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" name="muleWSDL" targetNamespace="http://www.tibco.com/muleWSDL/">
+  <wsdl:types>
+    <xsd:schema targetNamespace="http://www.tibco.com/muleWSDL/">
+      <xsd:element name="GetDBRecord">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="companyID" type="xsd:int" minOccurs="1" maxOccurs="1"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="GetDBRecordResponse" type="tns:Company">
+
+      </xsd:element>
+      <xsd:element name="PostDBRecord" type="tns:CompanyNoID">
+
+      </xsd:element>
+      <xsd:element name="PostDBRecordResponse">
+      	<xsd:complexType>
+      		<xsd:sequence>
+
+      			<xsd:element name="message" type="xsd:string"></xsd:element>
+      		</xsd:sequence>
+      	</xsd:complexType>
+      </xsd:element>
+      <xsd:element name="PublishJMSmsg">
+      	<xsd:complexType>
+      		<xsd:sequence>
+
+      			<xsd:element name="inMessage" type="xsd:string"></xsd:element>
+      		</xsd:sequence>
+      	</xsd:complexType>
+      </xsd:element>
+      <xsd:element name="PublishJMSmsgResponse">
+      	<xsd:complexType>
+      		<xsd:sequence>
+
+      			<xsd:element name="outMessage" type="xsd:string"></xsd:element>
+      		</xsd:sequence>
+      	</xsd:complexType>
+      </xsd:element>
+      <xsd:element name="ConsumeJMSmsg">
+      	<xsd:complexType>
+      		<xsd:sequence>
+
+      			<xsd:element name="in" type="xsd:string"></xsd:element>
+      		</xsd:sequence>
+      	</xsd:complexType>
+      </xsd:element>
+      <xsd:element name="ConsumeJMSmsgResponse">
+      	<xsd:complexType>
+      		<xsd:sequence>
+
+      			<xsd:element name="outMessage" type="xsd:string"></xsd:element>
+      		</xsd:sequence>
+      	</xsd:complexType>
+      </xsd:element>
+    
+      <xsd:complexType name="Company">
+      	<xsd:sequence>
+      		<xsd:element name="company_id" type="xsd:int"></xsd:element>
+      		<xsd:element name="company_name" type="xsd:string"></xsd:element>
+      		<xsd:element name="company_address" type="xsd:string"></xsd:element>
+      		<xsd:element name="company_phone" type="xsd:int"></xsd:element>
+      	</xsd:sequence>
+      </xsd:complexType>
+    
+      <xsd:complexType name="CompanyNoID">
+      	<xsd:sequence>
+      		<xsd:element name="company_name" type="xsd:string"></xsd:element>
+      		<xsd:element name="company_address" type="xsd:string"></xsd:element>
+      		<xsd:element name="company_phone" type="xsd:int"></xsd:element>
+      	</xsd:sequence>
+      </xsd:complexType>
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="GetDBRecordRequest">
+    <wsdl:part element="tns:GetDBRecord" name="companyID"/>
+  </wsdl:message>
+  <wsdl:message name="GetDBRecordResponse">
+    <wsdl:part element="tns:GetDBRecordResponse" name="Company"/>
+  </wsdl:message>
+  <wsdl:message name="PostDBRecordRequest">
+  	<wsdl:part name="companyNoID" element="tns:PostDBRecord"></wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="PostDBRecordResponse">
+  	<wsdl:part name="message" element="tns:PostDBRecordResponse"></wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="PublishJMSmsgRequest">
+  	<wsdl:part name="message" element="tns:PublishJMSmsg"></wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="PublishJMSmsgResponse">
+  	<wsdl:part name="message" element="tns:PublishJMSmsgResponse"></wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="ConsumeJMSmsgRequest">
+  	<wsdl:part name="message" element="tns:ConsumeJMSmsg"></wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="ConsumeJMSmsgResponse">
+  	<wsdl:part name="message" element="tns:ConsumeJMSmsgResponse"></wsdl:part>
+  </wsdl:message>
+  <wsdl:portType name="muleWSDL">
+    <wsdl:operation name="GetDBRecord">
+      <wsdl:input message="tns:GetDBRecordRequest"/>
+      <wsdl:output message="tns:GetDBRecordResponse"/>
+    </wsdl:operation>
+    <wsdl:operation name="PostDBRecord">
+    	<wsdl:input message="tns:PostDBRecordRequest"></wsdl:input>
+    	<wsdl:output message="tns:PostDBRecordResponse"></wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="PublishJMSmsg">
+    	<wsdl:input message="tns:PublishJMSmsgRequest"></wsdl:input>
+    	<wsdl:output message="tns:PublishJMSmsgResponse"></wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="ConsumeJMSmsg">
+    	<wsdl:input message="tns:ConsumeJMSmsgRequest"></wsdl:input>
+    	<wsdl:output message="tns:ConsumeJMSmsgResponse"></wsdl:output>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="muleWSDLSOAP" type="tns:muleWSDL">
+
+  	<soap:binding style="document"
+  		transport="http://schemas.xmlsoap.org/soap/http" />
+  	<wsdl:operation name="GetDBRecord">
+
+  		<soap:operation
+  			soapAction="http://www.tibco.com/muleWSDL/GetDBRecord" />
+  		<wsdl:input>
+
+  			<soap:body use="literal" />
+  		</wsdl:input>
+  		<wsdl:output>
+
+  			<soap:body use="literal" />
+  		</wsdl:output>
+  	</wsdl:operation>
+  	<wsdl:operation name="PostDBRecord">
+  		<soap:operation
+  			soapAction="http://www.tibco.com/muleWSDL/PostDBRecord" />
+  		<wsdl:input>
+  			<soap:body use="literal" />
+  		</wsdl:input>
+  		<wsdl:output>
+  			<soap:body use="literal" />
+  		</wsdl:output>
+  	</wsdl:operation>
+  	<wsdl:operation name="PublishJMSmsg">
+  		<soap:operation
+  			soapAction="http://www.tibco.com/muleWSDL/PublishJMSmsg" />
+  		<wsdl:input>
+  			<soap:body use="literal" />
+  		</wsdl:input>
+  		<wsdl:output>
+  			<soap:body use="literal" />
+  		</wsdl:output>
+  	</wsdl:operation>
+  	<wsdl:operation name="ConsumeJMSmsg">
+  		<soap:operation
+  			soapAction="http://www.tibco.com/muleWSDL/ConsumeJMSmsg" />
+  		<wsdl:input>
+  			<soap:body use="literal" />
+  		</wsdl:input>
+  		<wsdl:output>
+  			<soap:body use="literal" />
+  		</wsdl:output>
+  	</wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="muleWSDL">
+    <wsdl:port binding="tns:muleWSDLSOAP" name="muleWSDLSOAP">
+      <soap:address location="http://localhost:8081/"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
