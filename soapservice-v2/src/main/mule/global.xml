@@ -9,9 +9,4 @@ http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/
 	<db:config name="Database_Config" doc:name="Database Config" doc:id="b633f9e9-6cf8-41de-801d-5dea756759f4" >
 		<db:my-sql-connection host="${db.host}" port="${db.port}" user="${db.user}" password="${db.password}" database="${db.database}" />
 	</db:config>
-	<jms:config name="JMS_Config" doc:name="JMS Config" doc:id="683b4d98-b288-4f7b-8194-efddb9e0d38d" >
-		<jms:active-mq-connection >
-			<jms:factory-configuration />
-		</jms:active-mq-connection>
-	</jms:config>
 </mule>

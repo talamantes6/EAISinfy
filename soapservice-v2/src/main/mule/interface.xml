@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit-soap="http://www.mulesoft.org/schema/mule/apikit-soap" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/apikit-soap http://www.mulesoft.org/schema/mule/apikit-soap/current/mule-apikit-soap.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
-http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit-soap="http://www.mulesoft.org/schema/mule/apikit-soap" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/apikit-soap http://www.mulesoft.org/schema/mule/apikit-soap/current/mule-apikit-soap.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
     <http:listener-config name="api-httpListenerConfig">
-        <http:listener-connection host="0.0.0.0" port="8081"/>
+        <http:listener-connection host="0.0.0.0" port="8085"/>
     </http:listener-config>
     <apikit-soap:config httpStatusVarName="httpStatus" name="soapkit-config" port="muleWSDLSOAP" service="muleWSDL" wsdlLocation="muleWSDL.wsdl"/>
-    <flow name="api-main">
+    <jms:config name="JMS_Config" doc:name="JMS Config" doc:id="7d56e426-d7bf-4c66-b306-36194c89ade1" sendCorrelationId="NEVER" >
+		<jms:active-mq-connection username="admin" password="admin" >
+			<jms:factory-configuration brokerUrl="tcp://localhost:61616" />
+		</jms:active-mq-connection>
+	</jms:config>
+	<flow name="api-main">
         <http:listener config-ref="api-httpListenerConfig" path="/muleWSDL/muleWSDLSOAP">
             <http:response statusCode="#[attributes.protocolHeaders.httpStatus default 200]">
                 <http:body>#[payload]</http:body>
@@ -64,37 +70,28 @@ ns ns0 http://www.tibco.com/muleWSDL/
 		<logger level="INFO" doc:name="Logger" doc:id="4274c7c9-0fa9-450f-b87c-6e988205990e" message='"Response sent"'/>
     </flow>
     <flow name="PostDBRecord:\soapkit-config">
+		<jms:listener doc:name="Listener" doc:id="84f8cfe6-120d-44e9-a1b1-02c3c26de76f" config-ref="JMS_Config" destination="company.queue">
+			<jms:consumer-type >
+				<jms:queue-consumer />
+			</jms:consumer-type>
+		</jms:listener>
 		<logger level="INFO" doc:name="Logger" doc:id="89e2d309-19cf-4491-8337-6083a3de53ed" message='"Post DB record initiated"'/>
-		<ee:transform doc:name="Extract CompanyNoID" doc:id="4ddc633a-6302-4532-9bea-c003645eae47">
-			<ee:message>
-				<ee:set-payload><![CDATA[%dw 2.0
-output application/json
-ns ns0 http://www.tibco.com/muleWSDL/
----
-{
-	company_name: payload.body.ns0#PostDBRecord.company_name default "",
-	company_address: payload.body.ns0#PostDBRecord.company_address default "",
-	company_phone: payload.body.ns0#PostDBRecord.company_phone default 0
-}]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
-		<flow-ref doc:name="post DB record" doc:id="b77c7893-dd8c-4892-8eb0-761ec6c65bbb" name="postDBRecord" />
-		<ee:transform doc:name="Sending response" doc:id="9e2e1418-ce9f-4752-a513-711821947cd0" >
+		<ee:transform doc:name="Transform Message" doc:id="cdea921d-fb24-481a-bf94-7c1cc8a4f9c9" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
-output application/java
-ns ns0 http://www.tibco.com/muleWSDL/
+output application/json
+import java!utils::MyUtils
+var array= MyUtils::getArray(payload)
 ---
 {
-	body: {
-		ns0#PostDBRecordResponse: {
-			message: payload.message
-		}
-	} write "application/xml"
+	company_name:array[0],
+	company_address:array[1],
+	company_phone:array[2] as Number
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<logger level="INFO" doc:name="Logger" doc:id="2212662c-065c-4638-8aab-ce6eed18f0d4" message='"Response sent"'/>
+		<flow-ref doc:name="Flow Reference" doc:id="cce1d2b3-232a-45bc-a14e-03645e4fea6c" name="postDBRecord"/>
+		<logger level="INFO" doc:name="Logger" doc:id="2212662c-065c-4638-8aab-ce6eed18f0d4" message='#[payload]'/>
     </flow>
     <flow name="PublishJMSmsg:\soapkit-config">
         <ee:transform>
